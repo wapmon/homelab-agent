@@ -5,7 +5,6 @@ Run: `homelab-agent` or `python -m homelab_agent.main`
 from __future__ import annotations
 
 import asyncio
-import os
 import sys
 
 from claude_agent_sdk import (
@@ -92,9 +91,6 @@ def _short_args(d: dict, limit: int = 80) -> str:
 
 async def repl() -> None:
     config = load_config()
-    # Make the API key visible to the SDK / CLI
-    os.environ["ANTHROPIC_API_KEY"] = config.secrets.anthropic_api_key
-
     console.print(Panel(BANNER, border_style="cyan"))
 
     # Upfront authorization

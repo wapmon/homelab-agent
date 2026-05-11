@@ -10,7 +10,7 @@ upfront authorization; stops to ask before destructive operations.
 
 - Python 3.10+
 - Node.js (the Claude CLI bundled with `claude-agent-sdk` requires it)
-- An Anthropic API key
+- A Claude Pro or Max subscription (authenticated via `claude auth login`)
 - An SSH key pair; the public key must be in `authorized_keys` on each
   homelab host for the user defined in `config/inventory.yaml`
 - A Proxmox API token (Datacenter → Permissions → API Tokens)
@@ -26,6 +26,9 @@ git clone <your repo> homelab-agent
 cd homelab-agent
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
+
+# Authenticate with your Claude subscription (one-time)
+claude auth login
 
 cp .env.example .env
 # edit .env with real values

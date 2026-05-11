@@ -35,7 +35,6 @@ def _resolve_inventory_path() -> Path:
 
 @dataclass
 class Secrets:
-    anthropic_api_key: str
     proxmox_host: str
     proxmox_user: str
     proxmox_token_id: str
@@ -84,7 +83,6 @@ def load_config() -> Config:
     load_dotenv(PROJECT_ROOT / ".env")
 
     secrets = Secrets(
-        anthropic_api_key=_env("ANTHROPIC_API_KEY", required=True),
         proxmox_host=_env("PROXMOX_HOST"),
         proxmox_user=_env("PROXMOX_USER", "root@pam"),
         proxmox_token_id=_env("PROXMOX_TOKEN_ID"),
