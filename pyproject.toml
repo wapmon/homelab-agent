@@ -1,0 +1,25 @@
+[project]
+name = "homelab-agent"
+version = "0.1.0"
+description = "Custom Claude agent for managing a Proxmox-based homelab"
+requires-python = ">=3.10"
+dependencies = [
+    "claude-agent-sdk>=0.1.0",
+    "anthropic>=0.40.0",
+    "paramiko>=3.4.0",
+    "httpx>=0.27.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0.0",
+    "rich>=13.7.0",
+    "proxmoxer>=2.0.1",
+]
+
+[project.scripts]
+homelab-agent = "homelab_agent.main:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["homelab_agent*"]

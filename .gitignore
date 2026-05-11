@@ -1,0 +1,41 @@
+# --- Secrets and local config ---
+.env
+.env.*
+!.env.example
+config/inventory.yaml         # real inventory; commit only inventory.example.yaml
+
+# --- Keys & certs (defense in depth; should never be in the repo dir anyway) ---
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+id_ecdsa*
+*.ppk
+known_hosts
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Python ---
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+
+# --- IDE / OS ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
