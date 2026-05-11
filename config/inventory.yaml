@@ -1,0 +1,65 @@
+# Homelab inventory. The agent reads this to understand topology.
+# Fill in real values before running. Hostnames should match SSH config /
+# DNS so the agent can refer to "media-lxc" instead of an IP.
+
+proxmox:
+  node: pve  # the node name as shown in the Proxmox UI
+
+# Hosts the agent can SSH into. Reference by `name` in tool calls.
+# Use a dedicated, non-root user with a narrow sudoers file where possible.
+hosts:
+  - name: pve
+    address: 192.168.1.10
+    user: root
+    description: "Proxmox VE host. Use sparingly - prefer the API."
+
+  - name: homeassistant
+    address: 192.168.1.20
+    user: homeassistant
+    description: "HAOS VM. SSH add-on must be enabled."
+
+  - name: pihole
+    address: 192.168.1.21
+    user: pi
+    description: "Pi-hole LXC. Also runs unbound."
+
+  - name: media
+    address: 192.168.1.22
+    user: media
+    description: "LXC running emby, sonarr, radarr, transmission via docker-compose at /opt/media."
+
+  - name: nginx
+    address: 192.168.1.23
+    user: admin
+    description: "Reverse proxy (Nginx Proxy Manager) LXC."
+
+# Service endpoints. URLs and creds are pulled from .env; this file just
+# tells the agent which service lives where.
+services:
+  homeassistant:
+    host: homeassistant
+    notes: "Zigbee2MQTT runs as a HA add-on. Z-Wave JS via dongle on /dev/ttyUSB0."
+
+  pihole:
+    host: pihole
+    notes: "Two upstream DNS: 1.1.1.1 and local unbound on 127.0.0.1#5335."
+
+  sonarr:
+    host: media
+    container: sonarr
+    notes: "Library at /media/tv. Quality profile 'WEB-1080p' is the default."
+
+  radarr:
+    host: media
+    container: radarr
+    notes: "Library at /media/movies. TRaSH-guides custom formats applied."
+
+  transmission:
+    host: media
+    container: transmission
+    notes: "Download dir /downloads, watch dir /downloads/watch."
+
+  emby:
+    host: media
+    container: emby
+    notes: "Hardware transcoding via /dev/dri (Intel QSV)."
