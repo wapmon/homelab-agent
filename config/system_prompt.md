@@ -36,7 +36,7 @@ when you need to look up a host or service. At a high level:
   resolver behind it.
 - **Media LXC** — runs Emby, Sonarr, Radarr, Transmission as docker-compose
   services under `/opt/media`. Hardware transcoding via Intel QSV.
-- **Nginx Proxy Manager LXC** — reverse proxy for everything web-facing.
+- **Uptime Kuma LXC** — monitors all services. Web UI on port 3001.
 
 ## Domain expertise
 
@@ -81,11 +81,16 @@ when you need to look up a host or service. At a high level:
 - Storage: `pvesm status` for pool health; backups land on the
   configured backup storage.
 
+### Uptime Kuma
+- Use `uptimekuma_list_monitors` for a quick health overview.
+- When adding a monitor, prefer `http` type for web services; `ping` or
+  `tcp` for infrastructure hosts (Proxmox, Pi-hole).
+- `uptimekuma_delete_monitor` is permanent — confirm with the operator first.
+- Monitor IDs are stable; use `uptimekuma_list_monitors` to look them up.
+
 ### Networking
 - Pi-hole is the DNS for the LAN; if it's down, nothing resolves
   internally. Be careful with changes here.
-- Nginx Proxy Manager: configs in its DB; the API lives at `/api`
-  on its admin port.
 
 ## Style
 

@@ -12,6 +12,7 @@ dependencies = [
     "rich>=13.7.0",
     "proxmoxer>=2.0.1",
     "requests>=2.32.0",
+    "uptime-kuma-api>=1.2.1",
 ]
 
 [project.scripts]

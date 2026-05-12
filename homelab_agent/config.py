@@ -53,6 +53,9 @@ class Secrets:
     transmission_password: str
     emby_url: str
     emby_api_key: str
+    uptime_kuma_url: str
+    uptime_kuma_username: str
+    uptime_kuma_password: str
     ssh_key_path: Path
 
 
@@ -101,6 +104,9 @@ def load_config() -> Config:
         transmission_password=_env("TRANSMISSION_PASSWORD"),
         emby_url=_env("EMBY_URL"),
         emby_api_key=_env("EMBY_API_KEY"),
+        uptime_kuma_url=_env("UPTIME_KUMA_URL"),
+        uptime_kuma_username=_env("UPTIME_KUMA_USERNAME", "admin"),
+        uptime_kuma_password=_env("UPTIME_KUMA_PASSWORD"),
         ssh_key_path=Path(_env("SSH_KEY_PATH", "~/.ssh/id_ed25519")).expanduser(),
     )
 

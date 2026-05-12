@@ -28,6 +28,11 @@ hosts:
     user: media
     description: "LXC running emby, sonarr, radarr, transmission via docker-compose at /opt/media."
 
+  - name: uptime-kuma
+    address: status.homelab  # TODO: fill in real IP
+    user: admin
+    description: "Uptime Kuma monitoring LXC. Web UI on port 3001."
+
 
 # Service endpoints. URLs and creds are pulled from .env; this file just
 # tells the agent which service lives where.
