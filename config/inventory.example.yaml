@@ -28,11 +28,6 @@ hosts:
     user: media
     description: "LXC running emby, sonarr, radarr, transmission via docker-compose at /opt/media."
 
-  - name: nginx
-    address: 192.168.1.23
-    user: admin
-    description: "Reverse proxy (Nginx Proxy Manager) LXC."
-
 # Service endpoints. URLs and creds are pulled from .env; this file just
 # tells the agent which service lives where.
 services:

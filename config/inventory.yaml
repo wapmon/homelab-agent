@@ -3,35 +3,31 @@
 # DNS so the agent can refer to "media-lxc" instead of an IP.
 
 proxmox:
-  node: pve  # the node name as shown in the Proxmox UI
+  node: homelab  # the node name as shown in the Proxmox UI
 
 # Hosts the agent can SSH into. Reference by `name` in tool calls.
 # Use a dedicated, non-root user with a narrow sudoers file where possible.
 hosts:
-  - name: pve
-    address: 192.168.1.10
+  - name: homelab
+    address: 192.168.0.18
     user: root
     description: "Proxmox VE host. Use sparingly - prefer the API."
 
   - name: homeassistant
-    address: 192.168.1.20
-    user: homeassistant
+    address: 192.168.0.21
+    user: root
     description: "HAOS VM. SSH add-on must be enabled."
 
   - name: pihole
-    address: 192.168.1.21
+    address: 192.168.0.20
     user: pi
     description: "Pi-hole LXC. Also runs unbound."
 
-  - name: media
-    address: 192.168.1.22
+  - name: emby
+    address: 192.168.0.19
     user: media
     description: "LXC running emby, sonarr, radarr, transmission via docker-compose at /opt/media."
 
-  - name: nginx
-    address: 192.168.1.23
-    user: admin
-    description: "Reverse proxy (Nginx Proxy Manager) LXC."
 
 # Service endpoints. URLs and creds are pulled from .env; this file just
 # tells the agent which service lives where.
