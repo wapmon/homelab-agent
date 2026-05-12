@@ -31,6 +31,7 @@ from .tools import (
     proxmox,
     ssh,
     transmission,
+    uptimekuma,
 )
 
 console = Console()
@@ -51,6 +52,7 @@ def build_options(config) -> ClaudeAgentOptions:
         + arr.build_tools(config)
         + transmission.build_tools(config)
         + emby.build_tools(config)
+        + uptimekuma.build_tools(config)
     )
 
     server = create_sdk_mcp_server(
@@ -96,11 +98,11 @@ async def repl() -> None:
     # Upfront authorization
     n_tools = sum(
         len(m.build_tools(config))
-        for m in (inventory, ssh, proxmox, homeassistant, pihole, arr, transmission, emby)
+        for m in (inventory, ssh, proxmox, homeassistant, pihole, arr, transmission, emby, uptimekuma)
     )
     console.print(
         f"[yellow]The agent will be granted autonomous use of {n_tools} tools "
-        "(SSH, Proxmox API, Home Assistant, Pi-hole, *arr, Transmission, Emby).\n"
+        "(SSH, Proxmox API, Home Assistant, Pi-hole, *arr, Transmission, Emby, Uptime Kuma).\n"
         "It will stop and ask before destructive operations per its system prompt.[/yellow]"
     )
     if not Confirm.ask("Authorize?", default=True):
@@ -129,12 +131,18 @@ async def repl() -> None:
                 continue
 
             await client.query(user_input)
-            async for msg in client.receive_response():
-                if isinstance(msg, AssistantMessage):
-                    render_assistant(msg)
-                elif isinstance(msg, ResultMessage):
-                    # End-of-turn marker; ignore unless you want stats
-                    pass
+            thinking = console.status("[dim]thinking…[/dim]", spinner="dots")
+            thinking.start()
+            try:
+                async for msg in client.receive_response():
+                    thinking.stop()
+                    if isinstance(msg, AssistantMessage):
+                        render_assistant(msg)
+                    elif isinstance(msg, ResultMessage):
+                        # End-of-turn marker; ignore unless you want stats
+                        pass
+            finally:
+                thinking.stop()
 
 
 def main() -> None:
