@@ -5,7 +5,12 @@ Run: `homelab-agent` or `python -m homelab_agent.main`
 from __future__ import annotations
 
 import asyncio
+import base64
+import itertools
+import mimetypes
+import shlex
 import sys
+from pathlib import Path
 
 from claude_agent_sdk import (
     AssistantMessage,
@@ -19,7 +24,8 @@ from claude_agent_sdk import (
 from rich.console import Console
 from rich.markdown import Markdown
 from rich.panel import Panel
-from rich.prompt import Confirm, Prompt
+from prompt_toolkit import PromptSession
+from rich.prompt import Confirm
 
 from .config import load_config
 from .tools import (
@@ -36,9 +42,46 @@ from .tools import (
 
 console = Console()
 
+_SUPPORTED_IMAGE_TYPES = {"image/png", "image/jpeg", "image/gif", "image/webp"}
+
+
+def _build_image_message(image_path: str, text: str) -> dict:
+    """Validate and encode an image; return the ready-to-send message dict."""
+    path = Path(image_path).expanduser().resolve()
+    if not path.exists():
+        raise FileNotFoundError(f"No file at {path}")
+    media_type, _ = mimetypes.guess_type(str(path))
+    if media_type not in _SUPPORTED_IMAGE_TYPES:
+        raise ValueError(f"Unsupported image type '{media_type}'. Use PNG, JPEG, GIF, or WEBP.")
+    data = base64.standard_b64encode(path.read_bytes()).decode()
+    content: list[dict] = [
+        {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": data}},
+    ]
+    if text.strip():
+        content.append({"type": "text", "text": text.strip()})
+    return {"type": "user", "message": {"role": "user", "content": content}, "parent_tool_use_id": None}
+
+
+async def _once(msg: dict):
+    yield msg
+
+
 BANNER = """[bold cyan]Homelab Agent[/bold cyan] — Claude-powered ops for your Proxmox homelab.
 Type your request. Use [bold]/exit[/bold] to quit, [bold]/reset[/bold] for a fresh conversation.
+Attach a screenshot: [bold]/image /path/to/file.png [optional message][/bold]
 """
+
+
+async def _spinner(msg: str = "thinking…") -> None:
+    frames = itertools.cycle("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
+    try:
+        while True:
+            sys.stdout.write(f"\r{next(frames)} {msg}")
+            sys.stdout.flush()
+            await asyncio.sleep(0.1)
+    finally:
+        sys.stdout.write("\r\033[K")
+        sys.stdout.flush()
 
 
 def build_options(config) -> ClaudeAgentOptions:
@@ -111,38 +154,64 @@ async def repl() -> None:
 
     options = build_options(config)
 
+    session = PromptSession()
     async with ClaudeSDKClient(options=options) as client:
         while True:
             try:
-                user_input = Prompt.ask("\n[bold green]>[/bold green]")
+                user_input = await session.prompt_async("\n> ")
             except (EOFError, KeyboardInterrupt):
                 console.print("\nExiting.")
                 return
 
-            if user_input.strip() in ("/exit", "/quit"):
+            stripped = user_input.strip()
+            if stripped in ("/exit", "/quit"):
                 return
-            if user_input.strip() == "/reset":
+            if stripped == "/reset":
                 # New session: tear down and rebuild
                 await client.disconnect()
                 await client.connect()
                 console.print("[dim](conversation reset)[/dim]")
                 continue
-            if not user_input.strip():
+            if not stripped:
                 continue
 
-            await client.query(user_input)
-            thinking = console.status("[dim]thinking…[/dim]", spinner="dots")
-            thinking.start()
+            if stripped.startswith("/image "):
+                rest = stripped[len("/image "):].strip()
+                try:
+                    # shlex.split handles quoted paths and backslash-escaped spaces
+                    tokens = shlex.split(rest)
+                except ValueError as exc:
+                    console.print(f"[red]Image error: bad quoting — {exc}[/red]")
+                    continue
+                if not tokens:
+                    console.print("[red]Usage: /image /path/to/file.png [message][/red]")
+                    continue
+                img_path = tokens[0]
+                img_text = " ".join(tokens[1:])
+                try:
+                    msg = _build_image_message(img_path, img_text)
+                except (FileNotFoundError, ValueError) as exc:
+                    console.print(f"[red]Image error: {exc}[/red]")
+                    continue
+                query_arg = _once(msg)
+            else:
+                query_arg = stripped
+
+            spinner_task = asyncio.create_task(_spinner())
             try:
+                await client.query(query_arg)
                 async for msg in client.receive_response():
-                    thinking.stop()
+                    if not spinner_task.done():
+                        spinner_task.cancel()
+                        await asyncio.gather(spinner_task, return_exceptions=True)
                     if isinstance(msg, AssistantMessage):
                         render_assistant(msg)
                     elif isinstance(msg, ResultMessage):
-                        # End-of-turn marker; ignore unless you want stats
                         pass
             finally:
-                thinking.stop()
+                if not spinner_task.done():
+                    spinner_task.cancel()
+                    await asyncio.gather(spinner_task, return_exceptions=True)
 
 
 def main() -> None:
