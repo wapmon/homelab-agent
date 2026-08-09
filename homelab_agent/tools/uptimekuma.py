@@ -14,7 +14,7 @@ def _with_api(config: Config, fn):
 
     if not config.secrets.uptime_kuma_url:
         raise RuntimeError("UPTIME_KUMA_URL is not set in .env")
-    with UptimeKumaApi(config.secrets.uptime_kuma_url) as api:
+    with UptimeKumaApi(config.secrets.uptime_kuma_url, ssl_verify=False) as api:
         api.login(
             config.secrets.uptime_kuma_username,
             config.secrets.uptime_kuma_password,
@@ -90,8 +90,10 @@ def build_tools(config: Config) -> list:
         "url is required for http/keyword types. "
         "hostname + port are required for tcp. "
         "hostname is required for ping/dns. "
-        "interval defaults to 60 seconds.",
-        {"type": str, "name": str, "url": str, "hostname": str, "port": int, "interval": int, "keyword": str},
+        "interval defaults to 60 seconds. "
+        "Set ignore_tls=true for HTTPS targets with self-signed certs "
+        "(e.g. anything served by the homelab Caddy with `tls internal`).",
+        {"type": str, "name": str, "url": str, "hostname": str, "port": int, "interval": int, "keyword": str, "ignore_tls": bool},
     )
     async def uptimekuma_add_monitor(args: dict) -> dict:
         from uptime_kuma_api import MonitorType
@@ -116,6 +118,8 @@ def build_tools(config: Config) -> list:
             "type": monitor_type,
             "name": args["name"],
             "interval": int(args.get("interval") or 60),
+            # Newer Uptime Kuma requires `conditions` to be non-null; empty list is fine.
+            "conditions": [],
         }
         if args.get("url"):
             kwargs["url"] = args["url"]
@@ -125,6 +129,8 @@ def build_tools(config: Config) -> list:
             kwargs["port"] = int(args["port"])
         if args.get("keyword"):
             kwargs["keyword"] = args["keyword"]
+        if args.get("ignore_tls"):
+            kwargs["ignore_tls"] = True
 
         result = await asyncio.to_thread(
             _with_api, config, lambda api: api.add_monitor(**kwargs)
