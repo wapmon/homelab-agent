@@ -2,7 +2,8 @@
 .env
 .env.*
 !.env.example
-config/inventory.yaml         # real inventory; commit only inventory.example.yaml
+# real inventory; commit only inventory.example.yaml
+config/inventory.yaml
 
 # --- Keys & certs (defense in depth; should never be in the repo dir anyway) ---
 *.key
