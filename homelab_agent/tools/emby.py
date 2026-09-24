@@ -12,6 +12,7 @@ def _client(config: Config) -> httpx.Client:
         base_url=config.secrets.emby_url.rstrip("/"),
         headers={"X-Emby-Token": config.secrets.emby_api_key},
         timeout=20.0,
+        verify=False,  # *.homelab certs come from Caddy's internal CA
     )
 
 

@@ -48,6 +48,10 @@ class Secrets:
     sonarr_api_key: str
     radarr_url: str
     radarr_api_key: str
+    prowlarr_url: str
+    prowlarr_api_key: str
+    cleanuparr_url: str
+    cleanuparr_api_key: str
     transmission_url: str
     transmission_user: str
     transmission_password: str
@@ -99,6 +103,10 @@ def load_config() -> Config:
         sonarr_api_key=_env("SONARR_API_KEY"),
         radarr_url=_env("RADARR_URL"),
         radarr_api_key=_env("RADARR_API_KEY"),
+        prowlarr_url=_env("PROWLARR_URL"),
+        prowlarr_api_key=_env("PROWLARR_API_KEY"),
+        cleanuparr_url=_env("CLEANUPARR_URL"),
+        cleanuparr_api_key=_env("CLEANUPARR_API_KEY"),
         transmission_url=_env("TRANSMISSION_URL"),
         transmission_user=_env("TRANSMISSION_USER"),
         transmission_password=_env("TRANSMISSION_PASSWORD"),

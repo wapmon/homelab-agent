@@ -21,7 +21,8 @@ def _rpc(config: Config, method: str, arguments: dict | None = None) -> dict:
     headers = {}
     if _session_id:
         headers["X-Transmission-Session-Id"] = _session_id
-    with httpx.Client(timeout=20.0) as c:
+    # *.homelab certs come from Caddy's internal CA
+    with httpx.Client(timeout=20.0, verify=False) as c:
         r = c.post(s.transmission_url, json=payload, auth=auth, headers=headers)
         if r.status_code == 409:
             _session_id = r.headers.get("X-Transmission-Session-Id")

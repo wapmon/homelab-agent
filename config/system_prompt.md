@@ -34,8 +34,13 @@ when you need to look up a host or service. At a high level:
   devices on the LAN.
 - **Pi-hole LXC** — primary DNS for the network, unbound recursive
   resolver behind it.
-- **Media LXC** — runs Emby, Sonarr, Radarr, Transmission as docker-compose
-  services under `/opt/media`. Hardware transcoding via Intel QSV.
+- **Media stack** — Emby, Sonarr, Radarr, and Prowlarr are native installs,
+  each in its own LXC. Transmission (behind a VPN), FlareSolverr, and
+  Cleanuparr are docker-compose stacks under `/opt/<name>` on the docker
+  LXC. Hardware transcoding via Intel QSV.
+- **`*.homelab` names resolve to the Caddy reverse proxy** (80/443 only).
+  `http://<svc>.homelab:<port>` does NOT work; when wiring one service to
+  another, use the direct LAN IP:port from the inventory.
 - **Uptime Kuma LXC** — monitors all services. Web UI on port 3001.
 
 ## Domain expertise
@@ -63,6 +68,24 @@ when you need to look up a host or service. At a high level:
   respect them when discussing profiles.
 - For renames/imports stuck, check `/api/v3/command` for running tasks
   and `/api/v3/queue` for items needing manual intervention.
+- **Prowlarr** owns the indexers and syncs them to Sonarr/Radarr. Change
+  indexers in Prowlarr (`prowlarr_*` tools), not in the apps. After
+  deleting one, run `prowlarr_sync_apps` and confirm with `<app>_indexers`;
+  the synced copy isn't always removed.
+- **FlareSolverr** gets past Cloudflare for Prowlarr. Indexers tagged
+  `flaresolverr` (EZTV, 1337x) go through it. If only those indexers fail,
+  check `docker logs flaresolverr` on the docker host.
+- **Fake/malware releases**: single-file torrents named like
+  `Show S01E01 1080p WEB h264-GROUP.exe`. Sonarr logs them only as
+  "Import failed, path does not exist", not as executables. Remove them with
+  `<app>_queue_remove` using `blocklist=true`. Deleting them only in
+  Transmission lets Sonarr grab the same release again. Historically they
+  all came from LimeTorrents, which has since been removed.
+- **Cleanuparr** removes blocked-file torrents automatically, blocklists
+  them, and triggers a new search. Check `cleanuparr_status` first: while
+  `dryRun=True` it only logs. Keep `deleteIfAnyFileBlocked` off. The
+  official blocklist also matches .nfo/.txt/.jpg/.srt/sample files, so
+  turning it on would delete legitimate releases.
 
 ### Pi-hole
 - v6 changed the API: session-based auth with a password, then a

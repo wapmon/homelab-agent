@@ -30,10 +30,12 @@ from rich.prompt import Confirm
 from .config import load_config
 from .tools import (
     arr,
+    cleanuparr,
     emby,
     homeassistant,
     inventory,
     pihole,
+    prowlarr,
     proxmox,
     ssh,
     transmission,
@@ -93,6 +95,8 @@ def build_options(config) -> ClaudeAgentOptions:
         + homeassistant.build_tools(config)
         + pihole.build_tools(config)
         + arr.build_tools(config)
+        + prowlarr.build_tools(config)
+        + cleanuparr.build_tools(config)
         + transmission.build_tools(config)
         + emby.build_tools(config)
         + uptimekuma.build_tools(config)
@@ -141,11 +145,11 @@ async def repl() -> None:
     # Upfront authorization
     n_tools = sum(
         len(m.build_tools(config))
-        for m in (inventory, ssh, proxmox, homeassistant, pihole, arr, transmission, emby, uptimekuma)
+        for m in (inventory, ssh, proxmox, homeassistant, pihole, arr, prowlarr, cleanuparr, transmission, emby, uptimekuma)
     )
     console.print(
         f"[yellow]The agent will be granted autonomous use of {n_tools} tools "
-        "(SSH, Proxmox API, Home Assistant, Pi-hole, *arr, Transmission, Emby, Uptime Kuma).\n"
+        "(SSH, Proxmox API, Home Assistant, Pi-hole, *arr, Prowlarr, Cleanuparr, Transmission, Emby, Uptime Kuma).\n"
         "It will stop and ask before destructive operations per its system prompt.[/yellow]"
     )
     if not Confirm.ask("Authorize?", default=True):

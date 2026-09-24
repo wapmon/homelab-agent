@@ -30,7 +30,9 @@ homelab_agent/
     ├── proxmox.py       # list/status/action/snapshot for VMs and LXCs
     ├── homeassistant.py # get_state, search_entities, call_service, get_logbook
     ├── pihole.py        # summary, recent_queries, set_blocking (Pi-hole v6 session auth)
-    ├── arr.py           # system_status, queue, history for Sonarr + Radarr
+    ├── arr.py           # status, queue, history, indexers, queue_remove for Sonarr + Radarr
+    ├── prowlarr.py      # indexers, apps, search, update/delete indexer, sync
+    ├── cleanuparr.py    # status, events, set_dry_run, trigger_job
     ├── transmission.py  # torrents list, torrent actions (session header caching)
     ├── emby.py          # active_sessions, library_scan
     └── uptimekuma.py    # list/status/add/pause/resume/delete monitors
