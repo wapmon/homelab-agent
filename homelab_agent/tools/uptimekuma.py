@@ -118,8 +118,6 @@ def build_tools(config: Config) -> list:
             "type": monitor_type,
             "name": args["name"],
             "interval": int(args.get("interval") or 60),
-            # Newer Uptime Kuma requires `conditions` to be non-null; empty list is fine.
-            "conditions": [],
         }
         if args.get("url"):
             kwargs["url"] = args["url"]
@@ -130,11 +128,20 @@ def build_tools(config: Config) -> list:
         if args.get("keyword"):
             kwargs["keyword"] = args["keyword"]
         if args.get("ignore_tls"):
-            kwargs["ignore_tls"] = True
+            kwargs["ignoreTls"] = True
 
-        result = await asyncio.to_thread(
-            _with_api, config, lambda api: api.add_monitor(**kwargs)
-        )
+        def _add(api):
+            # Newer Uptime Kuma rejects monitors whose `conditions` column is NULL,
+            # but uptime-kuma-api 1.2.1's add_monitor() has no `conditions` kwarg.
+            # Build the payload with the library, add the field, and send it ourselves.
+            data = api._build_monitor_data(**kwargs)
+            data.setdefault("conditions", "[]")
+            return api._call("add", data)
+
+        try:
+            result = await asyncio.to_thread(_with_api, config, _add)
+        except Exception as e:  # noqa: BLE001 — surface any API error to the agent
+            return {"content": [{"type": "text", "text": f"Uptime Kuma error: {e}"}]}
         return {
             "content": [
                 {
